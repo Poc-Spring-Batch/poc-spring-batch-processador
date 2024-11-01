@@ -14,6 +14,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import br.com.pupposoft.poc.springbatch.processador.baixaestoque.domain.Estoque;
@@ -38,10 +39,12 @@ public class BaixaEstoqueConfiguration {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .allowStartIfComplete(true)
                 .build();
     }
 	
     @Bean
+    @DependsOn("baixaEstoqueStep")
     public Job baixaEstoquejob(Step baixaEstoqueStep, JobRepository jobRepository) {
         return new JobBuilder("baixa-stock-job", jobRepository)
                 .start(baixaEstoqueStep)

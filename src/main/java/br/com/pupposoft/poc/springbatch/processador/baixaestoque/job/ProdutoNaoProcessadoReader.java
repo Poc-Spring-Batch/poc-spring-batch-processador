@@ -29,12 +29,18 @@ public class ProdutoNaoProcessadoReader implements ItemReader<List<Produto>> {
 
 			final String url = produtoBaseUrl + "/poc/spring-batch/legado/v1/carrinho-compras/status/ABERTO/produtos";
 			WebClient webClient = webClientBuilder.baseUrl(url).build();
-			return webClient
-					.get()
-					.retrieve()
-					.bodyToMono(new ParameterizedTypeReference<List<Produto>>() {})
-					.block();
-
+			
+			List<Produto> produtos = webClient
+			.get()
+			.retrieve()
+			.bodyToMono(new ParameterizedTypeReference<List<Produto>>() {})
+			.block();
+			
+			if(produtos.isEmpty()) {
+				return null;
+			}
+			
+			return produtos;
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
