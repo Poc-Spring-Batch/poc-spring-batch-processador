@@ -8,6 +8,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,13 +29,14 @@ public class BaixaEstoqueConfiguration {
 	@Bean
     public Step baixaEstoqueStep(
     		@Qualifier("produtoNaoProcessadoReader") ItemReader<List<Produto>> reader, 
-    		@Qualifier("baixaEstoqueProcessadoWritter") ItemWriter<Estoque> writer, 
+    		@Qualifier("baixaEstoqueProcessadoWritter") ItemWriter<List<Estoque>> writer,
+    		@Qualifier("ajusteQuantidadeEstoqueProcessor")ItemProcessor<List<Produto>, List<Estoque>> processor,
     		JobRepository jobRepository) {
         
     	return new StepBuilder("baixa-estoque-step", jobRepository)
-                .<List<Produto>, Estoque>chunk(10, transactionManager)
+                .<List<Produto>, List<Estoque>>chunk(1, transactionManager)
                 .reader(reader)
-                //.processor(processor())
+                .processor(processor)
                 .writer(writer)
                 .build();
     }

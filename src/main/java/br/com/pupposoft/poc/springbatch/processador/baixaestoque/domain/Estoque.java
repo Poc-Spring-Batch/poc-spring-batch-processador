@@ -7,4 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class Estoque {
 	private Long id;
+	private Integer quantidade;
+	
+
 }

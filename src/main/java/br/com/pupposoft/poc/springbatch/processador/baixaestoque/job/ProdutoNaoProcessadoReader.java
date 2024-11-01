@@ -27,7 +27,7 @@ public class ProdutoNaoProcessadoReader implements ItemReader<List<Produto>> {
 	public List<Produto> read() {
 		try {
 
-			final String url = produtoBaseUrl + "/poc/monitoramento/produto/v1/produtos";
+			final String url = produtoBaseUrl + "/poc/spring-batch/legado/v1/carrinho-compras/status/ABERTO/produtos";
 			WebClient webClient = webClientBuilder.baseUrl(url).build();
 			return webClient
 					.get()
