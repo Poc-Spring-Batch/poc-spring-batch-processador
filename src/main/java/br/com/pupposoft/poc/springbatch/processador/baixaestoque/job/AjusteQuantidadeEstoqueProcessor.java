@@ -7,16 +7,17 @@ import org.springframework.stereotype.Component;
 
 import br.com.pupposoft.poc.springbatch.processador.baixaestoque.domain.Estoque;
 import br.com.pupposoft.poc.springbatch.processador.baixaestoque.domain.Produto;
+import br.com.pupposoft.poc.springbatch.processador.baixaestoque.usecase.ProcessarEstoqueUseCase;
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class AjusteQuantidadeEstoqueProcessor implements ItemProcessor<List<Produto>, List<Estoque>> {
 
-	private final AjusteQuantidadeEstoqueProcessor ajusteQuantidadeEstoqueProcessor;
+	private final ProcessarEstoqueUseCase processarEstoqueUseCase;
 	
 	@Override
 	public List<Estoque> process(List<Produto> produtos) {
-		return ajusteQuantidadeEstoqueProcessor.process(produtos);
+		return processarEstoqueUseCase.processar(produtos);
 	}
 }
