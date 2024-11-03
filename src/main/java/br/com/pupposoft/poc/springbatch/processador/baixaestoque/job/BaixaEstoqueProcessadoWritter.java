@@ -29,6 +29,8 @@ public class BaixaEstoqueProcessadoWritter implements ItemWriter<List<Estoque>> 
 	public void write(Chunk<? extends List<Estoque>> chunks) throws Exception {
 		try {
 			
+			//TODO: implementar (chamar usecase, etc)
+			
 			chunks.forEach(c -> {
 				c.forEach(e -> {
 					final String url = estoqueBaseUrl + "/poc/spring-batch/estoque/v1/produtos/"+ e.getId() +"/decrementar-estoque";

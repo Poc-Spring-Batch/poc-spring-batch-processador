@@ -9,5 +9,10 @@ public class Estoque {
 	private Long id;
 	private Integer quantidade;
 	
+	public Carrinho obterCarrinho() {
+		
+		//TODO: implementar
+		return null;
+	}
 
 }
