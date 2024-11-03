@@ -3,13 +3,10 @@ package br.com.pupposoft.poc.springbatch.processador.baixaestoque.job;
 import java.util.List;
 
 import org.springframework.batch.item.ItemReader;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import br.com.pupposoft.poc.springbatch.processador.baixaestoque.domain.Produto;
-import br.com.pupposoft.poc.springbatch.processador.baixaestoque.exception.AcessoProdutoServiceException;
+import br.com.pupposoft.poc.springbatch.processador.baixaestoque.usecase.ObterProdutosUsecase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,33 +15,26 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProdutoNaoProcessadoReader implements ItemReader<List<Produto>> {
 
-	@Value("${produto.base-url}")
-	private String produtoBaseUrl;
-	
-	private final WebClient.Builder webClientBuilder;
+	private final ObterProdutosUsecase obterProdutosUsecase;
 	
 	@Override
 	public List<Produto> read() {
 		try {
+			log.info("Start job");
 
-			final String url = produtoBaseUrl + "/poc/spring-batch/legado/v1/carrinho-compras/status/ABERTO/produtos";
-			WebClient webClient = webClientBuilder.baseUrl(url).build();
-			
-			List<Produto> produtos = webClient
-			.get()
-			.retrieve()
-			.bodyToMono(new ParameterizedTypeReference<List<Produto>>() {})
-			.block();
+			List<Produto> produtos = obterProdutosUsecase.obter();
 			
 			if(produtos.isEmpty()) {
+				log.info("End job");
 				return null;
 			}
 			
+			log.info("reader processed");
 			return produtos;
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			throw new AcessoProdutoServiceException();
+			log.warn("Error to process reader: {}", e.getMessage());
+			throw e;
 		}
 	}
 	
