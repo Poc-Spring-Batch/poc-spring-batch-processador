@@ -8,6 +8,7 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -30,8 +31,8 @@ public class BaixaEstoqueConfiguration {
 	@Bean
     public Step baixaEstoqueStep(
     		@Qualifier("produtoNaoProcessadoReader") ItemReader<List<Produto>> reader, 
-    		@Qualifier("baixaEstoqueProcessadoWritter") ItemWriter<List<Estoque>> writer,
     		@Qualifier("ajusteQuantidadeEstoqueProcessor")ItemProcessor<List<Produto>, List<Estoque>> processor,
+    		@Qualifier("baixaEstoqueProcessadoWritter") ItemWriter<List<Estoque>> writer,
     		JobRepository jobRepository) {
         
     	return new StepBuilder("baixa-estoque-step", jobRepository)
@@ -43,14 +44,26 @@ public class BaixaEstoqueConfiguration {
                 .build();
     }
 	
-    @Bean
-    @DependsOn("baixaEstoqueStep")
-    public Job baixaEstoquejob(Step baixaEstoqueStep, JobRepository jobRepository) {
-        return new JobBuilder("baixa-stock-job", jobRepository)
-                .start(baixaEstoqueStep)
-                //.next(moverArquivosStep(jobRepository))
-                .incrementer(new RunIdIncrementer())
-                .build();
-    }
-	
+	@Bean
+	public Step concluirPedidoStep(
+			@Qualifier("concluirPedidoTasklet") Tasklet concluirPedidoTasklet, 
+			JobRepository jobRepository) {
+		
+		return new StepBuilder("concluir-pedido-step", jobRepository)
+				.tasklet(concluirPedidoTasklet, transactionManager)
+				.build();
+	}
+
+	@Bean
+	@DependsOn(value = {"baixaEstoqueStep", "concluirPedidoStep"})
+	public Job baixaEstoquejob(
+			@Qualifier("baixaEstoqueStep") Step baixaEstoqueStep,
+			@Qualifier("concluirPedidoStep") Step concluirPedidoStep,
+			JobRepository jobRepository) {
+		return new JobBuilder("baixa-stock-job", jobRepository)
+				.start(baixaEstoqueStep)
+				.next(concluirPedidoStep)//É chamado após a conclusão do step anterior
+				.incrementer(new RunIdIncrementer())
+				.build();
+	}
 }
