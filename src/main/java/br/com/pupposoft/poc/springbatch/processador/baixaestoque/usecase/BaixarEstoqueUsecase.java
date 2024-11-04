@@ -1,5 +1,6 @@
 package br.com.pupposoft.poc.springbatch.processador.baixaestoque.usecase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -20,8 +21,9 @@ public class BaixarEstoqueUsecase {
 	public void baixar(List<Estoque> estoques) {
 		estoqueGateway.baixa(estoques);
 		
-		List<Carrinho> carrinhos = 
-				estoques.stream().map(Estoque::obterCarrinho).toList();
+		List<Carrinho> carrinhos = new ArrayList<>();
+		
+		estoques.forEach(e -> carrinhos.addAll(e.getCarrinhos()));
 		
 		carrinhoGateway.concluir(carrinhos);
 	}
