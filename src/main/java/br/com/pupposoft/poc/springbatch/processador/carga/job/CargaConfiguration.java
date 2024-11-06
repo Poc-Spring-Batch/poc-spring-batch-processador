@@ -18,6 +18,7 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
@@ -32,10 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class CargaConfiguration {
 
 	private final PlatformTransactionManager transactionManager;
-	
+
+    @Value("${carga.input-path}")
+    private String diretorio;
+
+
 	@Bean
     public Job job(
-    		@Qualifier("passoInicial") Step passoInicial, 
+    		@Qualifier("passoInicial") Step passoInicial,
     		@Qualifier("moverArquivosStep") Step moverArquivosStep,
     		JobRepository jobRepository) {
         return new JobBuilder("importar-arquivos", jobRepository)
@@ -47,8 +52,8 @@ public class CargaConfiguration {
 
     @Bean
     public Step passoInicial(
-    		@Qualifier("reader") ItemReader<Importacao> reader, 
-    		@Qualifier("writer") ItemWriter<Importacao> writer, 
+    		@Qualifier("reader") ItemReader<Importacao> reader,
+    		@Qualifier("writer") ItemWriter<Importacao> writer,
     		@Qualifier("processor") ImportacaoProcessor processor,
     		JobRepository jobRepository) {
         return new StepBuilder("passo-inicial", jobRepository)
@@ -56,6 +61,7 @@ public class CargaConfiguration {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .allowStartIfComplete(true)
                 .build();
     }
 
@@ -63,7 +69,7 @@ public class CargaConfiguration {
     public ItemReader<Importacao> reader() {
         return new FlatFileItemReaderBuilder<Importacao>()
                 .name("leitura-csv")
-                .resource(new FileSystemResource("files/dados.csv"))
+                .resource(new FileSystemResource( diretorio + "/dados.csv"))
                 .comments("--")
                 .delimited()
                 .delimiter(";")
@@ -93,8 +99,8 @@ public class CargaConfiguration {
     @Bean
     public Tasklet moverArquivosTasklet() {
         return (contribution, chunkContext) -> {
-            File pastaOrigem = new File("files");
-            File pastaDestino = new File("imported-files");
+            File pastaOrigem = new File(diretorio);
+            File pastaDestino = new File(diretorio + "/processados");
 
             if (!pastaDestino.exists()) {
                 pastaDestino.mkdirs();
@@ -121,7 +127,8 @@ public class CargaConfiguration {
     public Step moverArquivosStep(JobRepository jobRepository) {
         return new StepBuilder("mover-arquivo", jobRepository)
                 .tasklet(moverArquivosTasklet(), transactionManager)
+                .allowStartIfComplete(true)
                 .build();
     }
-	
+
 }
